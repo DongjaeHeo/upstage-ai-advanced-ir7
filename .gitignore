@@ -1,0 +1,8 @@
+# CSV 파일 무시
+*.csv
+
+# JSONL 파일 무시
+*.jsonl
+
+
+elasticsearch*
