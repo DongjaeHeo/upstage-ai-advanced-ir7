@@ -17,3 +17,6 @@ sleep 60
 
 # Elasticsearch 비밀번호 변경(앞으로 사용할 비밀번호 정보를 얻기 위해 실행)
 sudo -u daemon elasticsearch-8.8.0/bin/elasticsearch-reset-password -u elastic
+
+
+sudo -u daemon -s bash -c "bash /elasticsearch-8.8.0/bin/elasticsearch"
