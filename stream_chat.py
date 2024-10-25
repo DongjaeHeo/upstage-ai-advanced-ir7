@@ -581,9 +581,78 @@ def generate_prompt(recent_texts, related_texts, user_input, retrieved_docs=None
     
     return prompt
 
+session_id = "session1042"
+
 
 # 챗봇 함수 (최근 대화와 검색된 상위 3개의 대화 내용 사용)
-# 챗봇 함수 (사용자 입력과 AI 응답 저장)
+# # 챗봇 함수 (사용자 입력과 AI 응답 저장)
+# async def chatbot(session_id, user_input):
+#     # 최근 대화 및 관련 대화 가져오기
+#     recent_texts, related_texts = retrieve_conversations(session_id, user_input)
+    
+#     # 프롬프트 생성
+#     prompt = generate_prompt(recent_texts, related_texts, user_input)
+    
+#     # 에이전트에 사용자 입력 전달 (툴을 필요로 할 때만 사용)
+#     response = agent.run(prompt)
+    
+#     # 대화 내용 저장
+#     await async_store_conversation(session_id, user_input, "user")
+#     await async_store_conversation(session_id, response, "ai")
+    
+#     return response
+
+# session_id = "session1003"
+
+
+# def chatbot_sync(session_id, user_input):
+#     # 비동기 챗봇 호출을 동기적으로 처리
+#     return asyncio.run(chatbot(session_id, user_input))
+
+# # 대화 상태를 초기화하는 함수
+# def initialize_chat_state():
+#     if "messages" not in st.session_state:
+#         st.session_state["messages"] = []
+
+# # 사용자가 보낸 메시지를 처리하는 함수
+# def handle_user_message(user_input):
+#     # 사용자가 입력한 메시지를 저장
+#     st.session_state.messages.append({"role": "user", "content": user_input})
+
+#     # 비동기 AI 답변을 동기 함수로 처리
+#     response = chatbot_sync(session_id, user_input)
+    
+#     # AI의 응답을 저장
+#     st.session_state.messages.append({"role": "bot", "content": response})
+
+# # 메인 애플리케이션 실행
+# def main():
+#     st.title("Streamlit Chat - 베이스라인")
+
+#     # 대화 상태 초기화
+#     initialize_chat_state()
+
+#     # 사용자 입력
+#     user_input = st.text_input("여기에 메시지를 입력하세요:")
+
+#     if user_input:
+#         handle_user_message(user_input)
+
+#     # 이전 대화 기록을 화면에 표시
+#     for chat in st.session_state.messages:
+#         if chat["role"] == "user":
+#             message(chat["content"], is_user=True)
+#         else:
+#             message(chat["content"])
+
+# # 실행
+# if __name__ == "__main__":
+#     main()
+
+import chainlit as cl
+import asyncio
+
+# 비동기 챗봇 함수
 async def chatbot(session_id, user_input):
     # 최근 대화 및 관련 대화 가져오기
     recent_texts, related_texts = retrieve_conversations(session_id, user_input)
@@ -600,49 +669,20 @@ async def chatbot(session_id, user_input):
     
     return response
 
-session_id = "session1001"
-
-
+# 동기 챗봇 호출 함수 (비동기 호출을 동기 처리)
 def chatbot_sync(session_id, user_input):
-    # 비동기 챗봇 호출을 동기적으로 처리
     return asyncio.run(chatbot(session_id, user_input))
 
-# 대화 상태를 초기화하는 함수
-def initialize_chat_state():
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = []
-
 # 사용자가 보낸 메시지를 처리하는 함수
-def handle_user_message(user_input):
-    # 사용자가 입력한 메시지를 저장
-    st.session_state.messages.append({"role": "user", "content": user_input})
+@cl.on_message
+async def main(user_message):
 
-    # 비동기 AI 답변을 동기 함수로 처리
-    response = chatbot_sync(session_id, user_input)
-    
-    # AI의 응답을 저장
-    st.session_state.messages.append({"role": "bot", "content": response})
 
-# 메인 애플리케이션 실행
-def main():
-    st.title("Streamlit Chat - 베이스라인")
+    # 사용자가 입력한 메시지 처리 (Message 객체 속성에 접근)
+    user_input = user_message.content
 
-    # 대화 상태 초기화
-    initialize_chat_state()
+    # 비동기 챗봇 호출
+    response = await chatbot(session_id, user_input)
 
-    # 사용자 입력
-    user_input = st.text_input("여기에 메시지를 입력하세요:")
-
-    if user_input:
-        handle_user_message(user_input)
-
-    # 이전 대화 기록을 화면에 표시
-    for chat in st.session_state.messages:
-        if chat["role"] == "user":
-            message(chat["content"], is_user=True)
-        else:
-            message(chat["content"])
-
-# 실행
-if __name__ == "__main__":
-    main()
+    # Chainlit을 통해 AI의 응답을 사용자에게 전송
+    await cl.Message(content=response).send()
